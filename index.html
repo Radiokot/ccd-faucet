@@ -10,14 +10,17 @@
     }
 </style>
 <script>
+    const delay = (time) => (result) => new Promise(resolve => setTimeout(() => resolve(result), time))
 
-    function onGetCcdClicked() {
-        let delay = (time) => (result) => new Promise(resolve => setTimeout(() => resolve(result), time))
-
+    const requestDrop = () => {
         let addressInput = document.getElementById("address")
         let getCcdButton = document.getElementById("get-ccd-button")
         let statusSpan = document.getElementById("status")
         let address = addressInput.value.trim()
+
+        if (getCcdButton.enable == false) {
+            return
+        }
 
         if (address.length == 0) {
             return
@@ -90,8 +93,15 @@
         one per address.
     </p>
     <input type="text" id="address" placeholder="Paste your Concordium Testnet address" size="40" />
-
-    <button id="get-ccd-button" onclick="onGetCcdClicked()">Get CCD</button>
+    <script>
+        document.getElementById("address").addEventListener("keydown", function (event) {
+            if (event.key === 'Enter') {
+                event.preventDefault()
+                requestDrop()
+            }
+        })
+    </script>
+    <button id="get-ccd-button" onclick="requestDrop()">Get CCD</button>
     <br>
     <p>
         <span id="status"></span>
