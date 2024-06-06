@@ -10,7 +10,10 @@
     }
 </style>
 <script>
+
     function onGetCcdClicked() {
+        let delay = (time) => (result) => new Promise(resolve => setTimeout(() => resolve(result), time))
+
         let addressInput = document.getElementById("address")
         let getCcdButton = document.getElementById("get-ccd-button")
         let statusSpan = document.getElementById("status")
@@ -21,7 +24,7 @@
         }
 
         getCcdButton.disabled = true
-        statusSpan.innerText = "⌛"
+        statusSpan.innerText = "⌛ Requesting CCDs… Please, wait up to 10 seconds"
 
         fetch(
             "https://wallet-proxy.testnet.concordium.com/v0/testnetGTUDrop/" + address,
@@ -37,6 +40,7 @@
                 }
                 return response.json();
             })
+            .then(delay(7000))
             .then(submissionResult => {
                 let submissionId = submissionResult["submissionId"]
                 return fetch("https://wallet-proxy.testnet.concordium.com/v0/submissionStatus/" + submissionId)
@@ -46,11 +50,26 @@
                         }
                         return response.json();
                     })
+                    .then(submissionStatus =>
+                        Object.assign(
+                            {
+                                transactionHash: submissionId,
+                            },
+                            submissionStatus,
+                        )
+                    )
             })
             .then(submissionStatus => {
-                let amount = submissionStatus["amount"] / 1000000.0
+                console.log(submissionStatus)
+                let amountString = submissionStatus["amount"]
+                let amount = amountString / 1000000.0
                 let hash = submissionStatus["transactionHash"]
-                statusSpan.innerText = "✅ " + amount + " CCD (" + hash + ")"
+
+                if (amountString != undefined) {
+                    statusSpan.innerText = "✅ " + amount + " CCD (" + hash + ")"
+                } else {
+                    statusSpan.innerText = "✅ Pending submission (" + hash + ")"
+                }
 
                 getCcdButton.disabled = false
             })
